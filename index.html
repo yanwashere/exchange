@@ -578,7 +578,7 @@ footer {
 
     function padH(h) { return ('0' + h).slice(-2); }
     function startFmt(h) { return padH(h) + ':00'; }
-    function endFmt(h)   { return padH(h) + ':59'; }
+    function endFmt(h)   { return padH(h) + ':00'; }
     function toMskH(h)   { return (h - 5 + 24) % 24; }
 
     var isAllDay = (s === 0 && e === 23);
@@ -593,7 +593,7 @@ footer {
     var nowUtc   = new Date();
     var bjH      = (nowUtc.getUTCHours() + 8) % 24;
     var nowMins  = bjH * 60 + nowUtc.getUTCMinutes();
-    var isOpen   = isAllDay || (nowMins >= s * 60 && nowMins <= e * 60 + 59);
+    var isOpen   = isAllDay || (nowMins >= s * 60 && nowMins <= e * 60 + 60);
     dot.className = 'worktime-dot' + (isOpen ? ' open' : '');
   }
 
