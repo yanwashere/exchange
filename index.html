@@ -34,7 +34,6 @@
       background-size: 200px; pointer-events: none; z-index: 9999;
     }
 
-```
 /* NAV */
 nav {
   position: sticky; top: 0; z-index: 100;
@@ -322,7 +321,32 @@ footer {
   footer { flex-direction: column; text-align: center; padding: 20px; }
   .review-card { min-width: 260px; }
 }
-```
+
+/* WORKTIME */
+.worktime-section { max-width: 1100px; margin: 0 auto; padding: 0 40px 30px; }
+.worktime-card {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 13px 20px;
+  backdrop-filter: blur(12px);
+}
+.worktime-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(61,31,8,0.2);
+}
+.worktime-dot.open { background: #3DBE6E; animation: pulse 2s infinite; }
+.worktime-text { font-size: 0.84rem; color: var(--deep); font-weight: 500; }
+.worktime-sep { margin: 0 10px; color: var(--muted); }
+@media (max-width: 750px) {
+  .worktime-section { padding-left: 20px; padding-right: 20px; }
+  .worktime-text { font-size: 0.78rem; }
+}
+
+/* LIMITS */
+.calc-limits {
+  margin-top: 14px; font-size: 0.82rem;
+  color: rgba(255,200,130,0.65); text-align: center; letter-spacing: 0.02em;
+}
 
   </style>
 </head>
@@ -365,12 +389,12 @@ footer {
   <div class="rates-grid">
     <div class="rate-card fade-in d1">
       <div class="rate-pair">
-        <div class="currency-pill">&#127479;&#127482; RUB</div>
-        <span style="color:var(--muted);font-size:1.1rem">&#8594;</span>
         <div class="currency-pill">&#127464;&#127475; CNY</div>
+        <span style="color:var(--muted);font-size:1.1rem">&#8594;</span>
+        <div class="currency-pill">&#127479;&#127482; RUB</div>
       </div>
       <div class="rate-value" id="rub-rate"><span style="color:var(--muted);font-size:1rem">Загрузка…</span></div>
-      <div class="rate-sub">за 1 российский рубль</div>
+      <div class="rate-sub">за 1 юань (¥)</div>
       <div class="rate-upd" id="rub-upd">обновляется…</div>
     </div>
     <div class="rate-card fade-in d2">
@@ -382,6 +406,17 @@ footer {
       <div class="rate-value" id="usdt-rate"><span style="color:var(--muted);font-size:1rem">Загрузка…</span></div>
       <div class="rate-sub">за 1 USDT</div>
       <div class="rate-upd" id="usdt-upd">обновляется…</div>
+    </div>
+  </div>
+</section>
+
+<section class="worktime-section">
+  <div class="worktime-card">
+    <div class="worktime-dot" id="worktime-dot"></div>
+    <div class="worktime-text">
+      <span id="worktime-beijing">Загрузка…</span>
+      <span class="worktime-sep">·</span>
+      <span id="worktime-moscow"></span>
     </div>
   </div>
 </section>
@@ -408,6 +443,7 @@ footer {
       </div>
     </div>
   </div>
+  <div class="calc-limits" id="calc-limits">Загрузка…</div>
 </section>
 
 <section class="reviews-section">
@@ -457,28 +493,37 @@ footer {
 
 <script>
 (function() {
-  // ── CONFIG ──
-  var RATES_URL   = './exchange_rate.json';
-  var REVIEWS_URL = './reviews.json';
-  var UPDATE_MS   = 60000;
+  var RATES_URL = './exchange_rate.json';
+  var UPDATE_MS = 60000;
 
-  var rates = { RUB_CNY: 0.08163265306, USDT_CNY: 6.75 };
+  var rates = { RUB: 15.4, USDT: 6.5, minCNY: 10, maxCNY: 5000, workTime: { start_h: 9, end_h: 18 } };
 
-  // ── RATES ───────────────────────────────────────────────────────
+  // ── CORRECT ROUNDING (аналог бота) ──────────────────────────────
+  function correctRounding(amount) {
+    var r = Math.round(amount);
+    return ((Math.round(amount * 100) / 100) - r > 0.5) ? r + 1 : r;
+  }
+
+  // ── RATES DISPLAY ───────────────────────────────────────────────
   function showRates() {
-    document.getElementById('rub-rate').innerHTML  =
-      rates.RUB_CNY.toFixed(2)  + '<span class="cur"> ¥</span>';
+    document.getElementById('rub-rate').innerHTML =
+      rates.RUB.toFixed(2) + '<span class="cur"> ₽</span>';
     document.getElementById('usdt-rate').innerHTML =
-      rates.USDT_CNY.toFixed(2) + '<span class="cur"> ¥</span>';
+      rates.USDT.toFixed(2) + '<span class="cur"> ¥</span>';
     calcResult();
+    showLimits();
+    showWorkTime();
   }
 
   function loadRates() {
     fetch(RATES_URL + '?_=' + Date.now())
       .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function(data) {
-        rates.RUB_CNY  = data.RUB_CNY  || data.rub_cny  || 0.0813;
-        rates.USDT_CNY = data.USDT_CNY || data.usdt_cny || 6.5;
+        rates.RUB      = data.rub      || 15.4;
+        rates.USDT     = data.usdt_cny || 6.5;
+        rates.minCNY   = data.min_amount != null ? data.min_amount : 10;
+        rates.maxCNY   = data.max_amount != null ? data.max_amount : 5000;
+        rates.workTime = data.work_time || { start_h: 9, end_h: 18 };
         var upd = data.updated_at || data.updatedAt || null;
         var updTxt = upd
           ? 'обновлено ' + new Date(upd).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})
@@ -488,23 +533,69 @@ footer {
         showRates();
       })
       .catch(function() {
-        document.getElementById('rub-upd').textContent  = 'заглушка';
-        document.getElementById('usdt-upd').textContent = 'заглушка';
+        document.getElementById('rub-upd').textContent  = 'нет данных';
+        document.getElementById('usdt-upd').textContent = 'нет данных';
         showRates();
       });
   }
 
+  // ── CALCULATOR ──────────────────────────────────────────────────
   function calcResult() {
     var amount = parseFloat(document.getElementById('calc-amount').value);
     var from   = document.getElementById('calc-from').value;
     var el     = document.getElementById('calc-result');
     if (isNaN(amount) || amount <= 0) { el.textContent = '—'; return; }
-    var rate = from === 'RUB' ? rates.RUB_CNY : rates.USDT_CNY;
-    el.textContent = (amount * rate).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ¥';
+    var cny = (from === 'RUB') ? amount / rates.RUB : amount * rates.USDT;
+    el.textContent = correctRounding(cny).toLocaleString('ru-RU') + ' ¥';
   }
 
   document.getElementById('calc-amount').addEventListener('input', calcResult);
   document.getElementById('calc-from').addEventListener('change', calcResult);
+
+  // ── LIMITS ──────────────────────────────────────────────────────
+  function showLimits() {
+    var el = document.getElementById('calc-limits');
+    if (!el) return;
+    var minRub = correctRounding(rates.minCNY * rates.RUB);
+    var maxRub = correctRounding(rates.maxCNY * rates.RUB);
+    el.textContent =
+      'Мин: ' + rates.minCNY.toLocaleString('ru-RU') + ' ¥' +
+      ' (~' + minRub.toLocaleString('ru-RU') + ' ₽)' +
+      '  ·  ' +
+      'Макс: ' + rates.maxCNY.toLocaleString('ru-RU') + ' ¥' +
+      ' (~' + maxRub.toLocaleString('ru-RU') + ' ₽)';
+  }
+
+  // ── WORK TIME ───────────────────────────────────────────────────
+  function showWorkTime() {
+    var dot   = document.getElementById('worktime-dot');
+    var bjEl  = document.getElementById('worktime-beijing');
+    var mskEl = document.getElementById('worktime-moscow');
+    if (!dot || !bjEl) return;
+
+    var wt = rates.workTime;
+    var s  = wt.start_h, e = wt.end_h;
+
+    function padH(h) { return ('0' + h).slice(-2); }
+    function startFmt(h) { return padH(h) + ':00'; }
+    function endFmt(h)   { return padH(h) + ':59'; }
+    function toMskH(h)   { return (h - 5 + 24) % 24; }
+
+    var isAllDay = (s === 0 && e === 23);
+    if (isAllDay) {
+      bjEl.textContent  = 'Круглосуточно (Пекин)';
+      mskEl.textContent = 'Круглосуточно (МСК)';
+    } else {
+      bjEl.textContent  = startFmt(s) + '–' + endFmt(e) + ' по Пекину';
+      mskEl.textContent = startFmt(toMskH(s)) + '–' + endFmt(toMskH(e)) + ' по МСК';
+    }
+
+    var nowUtc   = new Date();
+    var bjH      = (nowUtc.getUTCHours() + 8) % 24;
+    var nowMins  = bjH * 60 + nowUtc.getUTCMinutes();
+    var isOpen   = isAllDay || (nowMins >= s * 60 && nowMins <= e * 60 + 59);
+    dot.className = 'worktime-dot' + (isOpen ? ' open' : '');
+  }
 
   // ── REVIEWS (carousel) ─────────────────────────────────────────
   var REVIEWS = [
