@@ -1,10 +1,10 @@
 {
-    "rub": 12.35,
-    "usdt_cny": 6.5,
-    "min_amount": 10.0,
-    "max_amount": 5000.0,
+    "rub": 12.25,
+    "usdt_cny": 6.77,
+    "min_amount": 300.0,
+    "max_amount": 10000.0,
     "work_time": {
-        "start_h": 11,
-        "end_h": 21
+        "start_h": 9,
+        "end_h": 18
     }
 }
