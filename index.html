@@ -758,15 +758,22 @@ footer {
   // ── SCRIPTABLE WIDGET BUTTON (iOS only) ─────────────────────────
   (function() {
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    if (isIOS) {
-      document.getElementById('scriptable-section').style.display = '';
-      document.getElementById('btn-scriptable').addEventListener('click', function() {
-        fetch('./widget.js').then(function(r){ return r.text(); }).then(function(code) {
-          document.getElementById('widget-code').textContent = code;
-          document.getElementById('scriptable-modal').style.display = '';
+    if (!isIOS) return;
+    document.getElementById('scriptable-section').style.display = '';
+
+    document.getElementById('btn-scriptable').addEventListener('click', function() {
+      fetch('./widget.js')
+        .then(function(r) { return r.text(); })
+        .then(function(code) {
+          var file = new File([code], 'RYExchange.js', { type: 'text/javascript' });
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: 'RYExchange Widget' });
+          } else {
+            document.getElementById('widget-code').textContent = code;
+            document.getElementById('scriptable-modal').style.display = '';
+          }
         });
-      });
-    }
+    });
   })();
 
   function copyWidgetCode() {
