@@ -744,7 +744,7 @@ footer {
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     if (isIOS) {
       document.getElementById('scriptable-section').style.display = '';
-      var widgetUrl = 'https://yanwashere.github.io/exchange/widget.js';
+      var widgetUrl = 'https://raw.githubusercontent.com/yanwashere/exchange/main/widget.js';
       document.getElementById('btn-scriptable').href =
         'scriptable:///import?url=' + encodeURIComponent(widgetUrl);
     }
