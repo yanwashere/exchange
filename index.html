@@ -301,45 +301,6 @@ footer {
   background: rgba(100,50,10,0.15);
 }
 
-/* SCRIPTABLE WIDGET SECTION */
-.scriptable-section {
-  padding: 40px 40px 0;
-  text-align: center;
-}
-.scriptable-section h2 {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--deep);
-  margin-bottom: 8px;
-}
-.scriptable-section p {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-.btn-scriptable {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #FFD045, #F07A20);
-  color: #3D1F08;
-  font-family: 'Syne', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  padding: 14px 28px;
-  border-radius: 50px;
-  text-decoration: none;
-  box-shadow: 0 4px 18px rgba(240,122,32,0.35);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.btn-scriptable:active { transform: scale(0.97); }
-.btn-scriptable svg { flex-shrink: 0; }
-@media (max-width: 750px) {
-  .scriptable-section { padding: 30px 20px 0; }
-}
-
 /* FADE IN */
 .fade-in { opacity: 0; transform: translateY(18px); animation: fadeUp 0.55s ease forwards; }
 @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
@@ -524,31 +485,6 @@ footer {
     </div>
   </div>
 </section>
-
-<section class="scriptable-section" id="scriptable-section" style="display:none">
-  <h2>📱 Виджет для iPhone</h2>
-  <p>Добавьте курсы прямо на рабочий стол — они обновляются каждые 5 минут</p>
-  <button class="btn-scriptable" id="btn-scriptable" type="button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Добавить виджет в Scriptable
-  </button>
-</section>
-
-<div id="scriptable-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;padding:20px;box-sizing:border-box;overflow-y:auto">
-  <div style="background:#1c1c1e;border-radius:16px;padding:24px;max-width:500px;margin:auto;margin-top:60px">
-    <h3 style="color:#fff;margin:0 0 8px;font-family:'Syne',sans-serif">Установка виджета</h3>
-    <p style="color:#aaa;font-size:.85rem;margin:0 0 16px;line-height:1.5">
-      1. Скопируйте код ниже<br>
-      2. Откройте Scriptable → <strong style="color:#fff">+</strong> → вставьте код → сохраните<br>
-      3. Добавьте виджет Scriptable на экран и выберите этот скрипт
-    </p>
-    <div style="position:relative">
-      <pre id="widget-code" style="background:#000;color:#f5c842;padding:14px;border-radius:10px;font-size:.78rem;overflow-x:auto;margin:0;white-space:pre-wrap;word-break:break-all"></pre>
-      <button id="copy-btn" onclick="copyWidgetCode()" style="position:absolute;top:8px;right:8px;background:#f5c842;color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:.8rem;font-weight:700;cursor:pointer">Скопировать</button>
-    </div>
-    <button onclick="document.getElementById('scriptable-modal').style.display='none'" style="width:100%;margin-top:16px;padding:12px;background:#333;color:#fff;border:none;border-radius:10px;font-size:.95rem;cursor:pointer">Закрыть</button>
-  </div>
-</div>
 
 <footer>
   <div><strong>RYExchange</strong> — обмен рублей и USDT на юани</div>
@@ -754,36 +690,6 @@ footer {
   setInterval(function() { goToPage(currentPage + 1); }, 4000);
 
   window.addEventListener('resize', renderReviews);
-
-  // ── SCRIPTABLE WIDGET BUTTON (iOS only) ─────────────────────────
-  (function() {
-    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    if (!isIOS) return;
-    document.getElementById('scriptable-section').style.display = '';
-
-    document.getElementById('btn-scriptable').addEventListener('click', function() {
-      fetch('./widget.js')
-        .then(function(r) { return r.text(); })
-        .then(function(code) {
-          var file = new File([code], 'RYExchange.js', { type: 'text/javascript' });
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'RYExchange Widget' });
-          } else {
-            document.getElementById('widget-code').textContent = code;
-            document.getElementById('scriptable-modal').style.display = '';
-          }
-        });
-    });
-  })();
-
-  function copyWidgetCode() {
-    var code = document.getElementById('widget-code').textContent;
-    navigator.clipboard.writeText(code).then(function() {
-      var btn = document.getElementById('copy-btn');
-      btn.textContent = 'Скопировано!';
-      setTimeout(function(){ btn.textContent = 'Скопировать'; }, 2000);
-    });
-  }
 
   // ── INIT ────────────────────────────────────────────────────────
   loadRates();
