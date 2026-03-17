@@ -528,7 +528,7 @@ footer {
 <section class="scriptable-section" id="scriptable-section" style="display:none">
   <h2>📱 Виджет для iPhone</h2>
   <p>Добавьте курсы прямо на рабочий стол — они обновляются каждые 5 минут</p>
-  <a class="btn-scriptable" href="scriptable:///import?url=https://yanwashere.github.io/exchange/widget.js">
+  <a class="btn-scriptable" id="btn-scriptable" href="#">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Добавить виджет в Scriptable
   </a>
@@ -744,6 +744,9 @@ footer {
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     if (isIOS) {
       document.getElementById('scriptable-section').style.display = '';
+      var widgetUrl = 'https://raw.githubusercontent.com/yanwashere/exchange/main/widget.js';
+      document.getElementById('btn-scriptable').href =
+        'scriptable:///import?url=' + encodeURIComponent(widgetUrl);
     }
   })();
 
